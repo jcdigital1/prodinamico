@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'jeannmkt2@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isApprovedUser() {
+      return isSignedIn() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved')
+      );
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && (
+        (request.auth.token.email == 'jeannmkt2@gmail.com' && request.resource.data.role == 'admin' && request.resource.data.status == 'approved') ||
+        (request.resource.data.role == 'buyer' && request.resource.data.status == 'pending')
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'email']))
+      );
+    }
+
+    // ADMINS COLLECTION
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // COUNTERS COLLECTION
+    match /counters/{counterId} {
+      allow read: if isApprovedUser();
+      allow write: if isApprovedUser();
+    }
+
+    // CALIBRATIONS COLLECTION (Models calibration)
+    match /calibrations/{modelId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // BATCHES COLLECTION
+    match /batches/{batchId} {
+      allow get: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow list: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow create: if isApprovedUser() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // PLATES COLLECTION
+    match /plates/{plateId} {
+      allow get: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow list: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow create: if isApprovedUser() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // QR CODES COLLECTION (Public dynamic redirection)
+    match /qrcodes/{qrId} {
+      // Anyone can get to resolve dynamic redirect
+      allow get: if true;
+      allow list: if isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin());
+      allow create: if isApprovedUser() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if 
+        (isApprovedUser() && (resource.data.buyerId == request.auth.uid || isAdmin())) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clickCount', 'lastClickAt', 'updatedAt']));
+    }
+
+    // Default deny for everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

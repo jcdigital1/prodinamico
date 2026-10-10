@@ -1,0 +1,137 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and approval status",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "fullName": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["admin", "buyer"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "blocked"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "fullName", "role", "status", "createdAt"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Admin access token document",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 256 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Batch": {
+      "title": "Batch",
+      "description": "Batch of dynamic NFC/QR plates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "buyerId": { "type": "string", "maxLength": 128 },
+        "buyerEmail": { "type": "string", "maxLength": 256 },
+        "modelId": { "type": "string", "maxLength": 64 },
+        "quantity": { "type": "number" },
+        "startNumber": { "type": "number" },
+        "endNumber": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "buyerId", "modelId", "quantity", "startNumber", "endNumber", "createdAt"]
+    },
+    "Plate": {
+      "title": "Plate",
+      "description": "Single NFC Plate with calibrated QR code and permanent ID",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "plateNumber": { "type": "number" },
+        "formattedNumber": { "type": "string", "maxLength": 16 },
+        "batchId": { "type": "string", "maxLength": 128 },
+        "buyerId": { "type": "string", "maxLength": 128 },
+        "modelId": { "type": "string", "maxLength": 64 },
+        "qrCodeId": { "type": "string", "maxLength": 64 },
+        "targetUrl": { "type": "string", "maxLength": 2048 },
+        "title": { "type": "string", "maxLength": 128 },
+        "clickCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "plateNumber", "formattedNumber", "batchId", "buyerId", "modelId", "qrCodeId", "targetUrl", "createdAt"]
+    },
+    "DynamicQr": {
+      "title": "DynamicQr",
+      "description": "Public dynamic redirection record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "plateNumber": { "type": "number" },
+        "formattedNumber": { "type": "string", "maxLength": 16 },
+        "buyerId": { "type": "string", "maxLength": 128 },
+        "targetUrl": { "type": "string", "maxLength": 2048 },
+        "clickCount": { "type": "number" },
+        "lastClickAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "plateNumber", "buyerId", "targetUrl", "clickCount", "createdAt"]
+    },
+    "ModelCalibration": {
+      "title": "ModelCalibration",
+      "description": "Calibration settings for model QR and number positions",
+      "type": "object",
+      "properties": {
+        "modelId": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 128 },
+        "imageUrl": { "type": "string", "maxLength": 2048 },
+        "qrBox": { "type": "object" },
+        "numberBox": { "type": "object" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["modelId", "name", "imageUrl", "qrBox", "numberBox"]
+    },
+    "Counter": {
+      "title": "Counter",
+      "description": "Global atomic counter for plates",
+      "type": "object",
+      "properties": {
+        "currentNumber": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["currentNumber"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile with role and approval state"
+    },
+    "/admins/{adminId}": {
+      "schema": "AdminRecord",
+      "description": "Trusted admin collection"
+    },
+    "/batches/{batchId}": {
+      "schema": "Batch",
+      "description": "Batches created by approved buyers"
+    },
+    "/plates/{plateId}": {
+      "schema": "Plate",
+      "description": "Plates generated in batches"
+    },
+    "/qrcodes/{qrId}": {
+      "schema": "DynamicQr",
+      "description": "Dynamic redirect endpoints for QR codes"
+    },
+    "/calibrations/{modelId}": {
+      "schema": "ModelCalibration",
+      "description": "Calibration coordinates for models"
+    },
+    "/counters/{counterId}": {
+      "schema": "Counter",
+      "description": "Atomic serial counter for plates"
+    }
+  }
+}
