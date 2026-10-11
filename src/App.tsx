@@ -61,10 +61,10 @@ const AppContent: React.FC = () => {
   // 2. LOADING STATE
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#040406] flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#030712] flex flex-col items-center justify-center p-4">
         <BrandLogo3D size="lg" />
-        <div className="mt-8 flex items-center gap-3 text-red-500 font-semibold text-xs tracking-widest uppercase">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+        <div className="mt-8 flex items-center gap-3 text-sky-400 font-semibold text-xs tracking-widest uppercase">
+          <div className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping" />
           Inicializando Dinâmico Pro...
         </div>
       </div>
